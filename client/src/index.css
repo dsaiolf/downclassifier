@@ -1,0 +1,21 @@
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f6f6f6;
+
+  --color-border-secondary: #c0c0c0;
+  --color-border-tertiary: #e2e2e2;
+
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #555555;
+  --color-text-tertiary: #999999;
+  --color-text-danger: #c0392b;
+
+  --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+}

@@ -1,0 +1,5 @@
+{
+  "framework": "container",
+  "handle": "downclassifier/downclassifier",
+  "port": 3000
+}
