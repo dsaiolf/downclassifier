@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import d2Logo from "./assets/logo/d2_logo.png";
 
 // ── API helpers ───────────────────────────────────────────────────────
 const API_BASE  = import.meta.env.VITE_API_BASE || "";
@@ -56,7 +57,7 @@ const ITEM_TYPE_META = {
 
 const CATEGORY_META = {
   ORGANISATIONAL:        { label: "Organisational",        bg: "#E6F1FB", border: "#378ADD", text: "#0C447C", badge: "#185FA5" },
-  POLITICALLY_SENSITIVE: { label: "Politically sensitive", bg: "#FBEAF0", border: "#D4537E", text: "#72243E", badge: "#993556" },
+  POLITICALLY_SENSITIVE: { label: "Politically sensitive", bg: "#EEEAFB", border: "#7B5CBF", text: "#3D2278", badge: "#5B3FA8" },
   LEAD_TIME:             { label: "Lead time",             bg: "#FAEEDA", border: "#BA7517", text: "#633806", badge: "#854F0B" },
 };
 
@@ -141,7 +142,7 @@ function Step({ n, label, active, done }) {
       <div style={{
         width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 12, fontWeight: 500,
-        background: done ? "#1D9E75" : active ? "#534AB7" : "var(--color-background-secondary)",
+        background: done ? "#1D9E75" : active ? "var(--color-primary)" : "var(--color-background-secondary)",
         color: done || active ? "#fff" : "var(--color-text-tertiary)",
         border: active || done ? "none" : "0.5px solid var(--color-border-secondary)",
         flexShrink: 0,
@@ -163,7 +164,7 @@ function Spinner() {
   return (
     <span style={{
       display: "inline-block", width: 13, height: 13,
-      border: "2px solid rgba(83,74,183,0.2)", borderTopColor: "#534AB7",
+      border: "2px solid rgba(14,116,144,0.2)", borderTopColor: "var(--color-primary)",
       borderRadius: "50%", animation: "spin 0.8s linear infinite",
     }} />
   );
@@ -199,39 +200,53 @@ function LoginPage({ onNext }) {
   };
 
   return (
-    <div style={{ minHeight: 480, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32 }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 28, fontWeight: 500, color: "#534AB7", letterSpacing: -0.5 }}>D2↓</div>
-        <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 4 }}><strong>D</strong>ocument Down-Classification Buddy</div>
-      </div>
+    <div style={{ display: "flex", height: "100vh" }}>
+      {/* Left pane — brand */}
       <div style={{
-        background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)",
-        borderRadius: 12, padding: "2rem 2.5rem", width: "100%", maxWidth: 380,
-        display: "flex", flexDirection: "column", gap: 16,
+        width: "50%", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: 20,
+        background: "linear-gradient(155deg, #0F2A45 0%, #1A4A78 60%, #0F2A45 100%)",
       }}>
-        <div style={{ fontSize: 14, fontWeight: 500 }}>Sign in</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Username</label>
-          <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-            placeholder="Enter your username" style={{ width: "100%", boxSizing: "border-box" }}
-            onKeyDown={e => e.key === "Enter" && go()} />
+        <img src={d2Logo} alt="D2 logo" style={{ height: 140, width: "auto" }} />
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", letterSpacing: 0.3, textAlign: "center" }}>
+          Document Down-Classification Buddy
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-            placeholder="Enter your password" style={{ width: "100%", boxSizing: "border-box" }}
-            onKeyDown={e => e.key === "Enter" && go()} />
-        </div>
-        {error && <div style={{ fontSize: 12, color: "#c0392b" }}>{error}</div>}
-        <button onClick={go} disabled={loading} style={{
-          marginTop: 4, background: "#534AB7", color: "#fff", border: "none",
-          borderRadius: 8, padding: "10px 0", fontWeight: 500, fontSize: 14,
-          cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
-        }}>
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
       </div>
-      <div style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>For authorised personnel only.</div>
+
+      {/* Right pane — form */}
+      <div style={{
+        width: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+        background: "var(--color-background-primary)", padding: "2rem",
+      }}>
+        <div style={{ width: "100%", maxWidth: 380, display: "flex", flexDirection: "column", gap: 24 }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 6 }}>Welcome back</div>
+            <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Sign in to your account to continue</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>Username</label>
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)}
+                placeholder="Enter your username" style={{ width: "100%", boxSizing: "border-box" }}
+                onKeyDown={e => e.key === "Enter" && go()} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>Password</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Enter your password" style={{ width: "100%", boxSizing: "border-box" }}
+                onKeyDown={e => e.key === "Enter" && go()} />
+            </div>
+            {error && <div style={{ fontSize: 12, color: "var(--color-text-danger)" }}>{error}</div>}
+            <button onClick={go} disabled={loading} style={{
+              marginTop: 4, background: "var(--color-primary)", color: "#fff", border: "none",
+              borderRadius: 8, padding: "11px 0", fontWeight: 500, fontSize: 14,
+              cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
+            }}>
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -261,12 +276,12 @@ function DisclaimerPage({ onNext }) {
         <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", paddingTop: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
           <input type="checkbox" id="accept" checked={accepted} onChange={e => setAccepted(e.target.checked)} style={{ marginTop: 2, cursor: "pointer" }} />
           <label htmlFor="accept" style={{ fontSize: 13, color: "var(--color-text-secondary)", cursor: "pointer", lineHeight: 1.5 }}>
-            I have read and understood the above. I accept responsibility for all classification decisions made using this tool.
+            I have read and understood the above. I understand this tool provides suggestions only. All classification decisions are my own responsibility.
           </label>
         </div>
       </div>
       <button onClick={onNext} disabled={!accepted} style={{
-        background: accepted ? "#534AB7" : "var(--color-background-secondary)",
+        background: accepted ? "var(--color-primary)" : "var(--color-background-secondary)",
         color: accepted ? "#fff" : "var(--color-text-tertiary)",
         border: accepted ? "0.5px solid #3D35A0" : "0.5px solid var(--color-border-secondary)",
         borderRadius: 8, padding: "10px 32px", fontWeight: 500, fontSize: 14,
@@ -381,7 +396,7 @@ function CriteriaPage({ session, onResults }) {
   const sourceDot = (source) => (
     <span title={source === "registry" ? "Pre-configured" : "Added this session"} style={{
       width: 6, height: 6, borderRadius: "50%",
-      background: source === "registry" ? "#534AB7" : "#1D9E75",
+      background: source === "registry" ? "var(--color-primary)" : "#1D9E75",
       display: "inline-block", flexShrink: 0,
     }} />
   );
@@ -389,7 +404,7 @@ function CriteriaPage({ session, onResults }) {
   const tabBtn = (mode, label) => (
     <button onClick={() => setAddMode(mode)} style={{
       fontSize: 12, padding: "5px 14px", borderRadius: 6, cursor: "pointer",
-      background: addMode === mode ? "#534AB7" : "var(--color-background-secondary)",
+      background: addMode === mode ? "var(--color-primary)" : "var(--color-background-secondary)",
       color: addMode === mode ? "#fff" : "var(--color-text-secondary)",
       border: addMode === mode ? "none" : "0.5px solid var(--color-border-secondary)",
       fontWeight: addMode === mode ? 500 : 400,
@@ -408,7 +423,7 @@ function CriteriaPage({ session, onResults }) {
         </div>
         <div style={{ display: "flex", gap: 12, fontSize: 11, color: "var(--color-text-secondary)", alignItems: "center", flexShrink: 0 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#534AB7", display: "inline-block" }} />Pre-configured
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-primary)", display: "inline-block" }} />Pre-configured
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#1D9E75", display: "inline-block" }} />Added this session
@@ -435,7 +450,7 @@ function CriteriaPage({ session, onResults }) {
             <div style={{ background: m.bg, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
               <Badge category={cat} />
               <span style={{ fontSize: 12, color: m.text }}>
-                {totalCount === 0 ? "No criteria added" : `${totalCount} criterion${totalCount !== 1 ? "a" : ""} active`}
+                {totalCount === 0 ? "No criteria added" : `${totalCount} criteri${totalCount !== 1 ? "a" : "on"} active`}
               </span>
             </div>
 
@@ -522,7 +537,7 @@ function CriteriaPage({ session, onResults }) {
                 placeholder={addType === "project" ? "e.g. FALCON" : addType === "organisation" ? "e.g. Helios Group" : "e.g. Bubble Lab"}
                 style={{ fontSize: 12 }} onKeyDown={e => e.key === "Enter" && addNamedItem()} />
             </div>
-            <button onClick={addNamedItem} style={{ fontSize: 12, padding: "6px 14px", background: "#534AB7", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", alignSelf: "flex-end" }}>
+            <button onClick={addNamedItem} style={{ fontSize: 12, padding: "6px 14px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", alignSelf: "flex-end" }}>
               + Add
             </button>
           </div>
@@ -540,7 +555,7 @@ function CriteriaPage({ session, onResults }) {
                 placeholder="Type custom rule to be added to the indicated category here."
                 style={{ fontSize: 12 }} onKeyDown={e => e.key === "Enter" && addRule()} />
             </div>
-            <button onClick={addRule} style={{ fontSize: 12, padding: "6px 14px", background: "#534AB7", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", alignSelf: "flex-end" }}>
+            <button onClick={addRule} style={{ fontSize: 12, padding: "6px 14px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", alignSelf: "flex-end" }}>
               + Add
             </button>
           </div>
@@ -591,7 +606,7 @@ function CriteriaPage({ session, onResults }) {
 
       <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 8, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
         <button onClick={handleRun} disabled={loading || !pdfFile || !registryLoaded} style={{
-          background: loading || !pdfFile ? "var(--color-background-secondary)" : "#534AB7",
+          background: loading || !pdfFile ? "var(--color-background-secondary)" : "var(--color-primary)",
           color: loading || !pdfFile ? "var(--color-text-tertiary)" : "#fff",
           border: "none", borderRadius: 8, padding: "10px 28px",
           fontWeight: 500, fontSize: 14, cursor: loading || !pdfFile ? "default" : "pointer",
@@ -806,7 +821,7 @@ function ResultsPage({ pipelineResult, onBack }) {
             )}
           </div>
           {isUnflagged
-            ? <button onClick={e => { e.stopPropagation(); reflag(d.ref_no); }} style={smallBtn("#534AB7")}>Reflag</button>
+            ? <button onClick={e => { e.stopPropagation(); reflag(d.ref_no); }} style={smallBtn("var(--color-primary)")}>Reflag</button>
             : <button onClick={e => { e.stopPropagation(); unflag(d.ref_no); }} style={smallBtn("#C0392B")}>Unflag</button>}
         </div>
 
@@ -880,7 +895,7 @@ function ResultsPage({ pipelineResult, onBack }) {
           </div>
         </div>
         <button onClick={handleDownload} style={{
-          background: "#534AB7", color: "#fff", border: "none", borderRadius: 8,
+          background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8,
           padding: "8px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer",
           display: "flex", alignItems: "center", gap: 6,
         }}>
@@ -952,19 +967,23 @@ function ResultsPage({ pipelineResult, onBack }) {
 
 // ── Shell ─────────────────────────────────────────────────────────────
 
-const STEPS = ["Sign in", "Disclaimer", "Criteria & Upload", "Results"];
+const STEPS = ["Sign in", "Disclaimer", "Curate Criteria & Upload Report", "Results"];
 
 export default function App() {
   const [page, setPage] = useState(0);
   const [session, setSession] = useState(null);
   const [pipelineResult, setPipelineResult] = useState(null);
 
+  if (page === 0) {
+    return <LoginPage onNext={info => { setSession(info); setPage(1); }} />;
+  }
+
   return (
     <div style={{ padding: "1.5rem", maxWidth: 1280, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, paddingBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontSize: 18, fontWeight: 500, color: "#534AB7", lineHeight: 1.2 }}>D2↓</span>
-          <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}><strong>D</strong>ocument Down-Classification Buddy</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-start" }}>
+          <img src={d2Logo} alt="D2 logo" style={{ height: 36, width: "auto" }} />
+          <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>Document Down-Classification Buddy</span>
         </div>
         {session && (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -982,7 +1001,7 @@ export default function App() {
         )}
       </div>
 
-      {page > 0 && page < 3 && (
+      {page < 3 && (
         <div style={{ display: "flex", gap: 20, marginBottom: 28, alignItems: "center" }}>
           {STEPS.slice(1).map((s, i) => (
             <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -993,7 +1012,6 @@ export default function App() {
         </div>
       )}
 
-      {page === 0 && <LoginPage onNext={info => { setSession(info); setPage(1); }} />}
       {page === 1 && <DisclaimerPage onNext={() => setPage(2)} />}
       {page === 2 && <CriteriaPage session={session} onResults={data => { setPipelineResult(data); setPage(3); }} />}
       {page === 3 && pipelineResult && <ResultsPage pipelineResult={pipelineResult} onBack={() => setPage(2)} />}
