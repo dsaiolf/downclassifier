@@ -136,9 +136,9 @@ function Badge({ category }) {
   );
 }
 
-function Step({ n, label, active, done }) {
+function Step({ n, label, active, done, onClick }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 8, cursor: onClick ? "pointer" : "default" }}>
       <div style={{
         width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 12, fontWeight: 500,
@@ -153,6 +153,7 @@ function Step({ n, label, active, done }) {
         fontSize: 13,
         color: active ? "var(--color-text-primary)" : "var(--color-text-secondary)",
         fontWeight: active ? 500 : 400,
+        textDecoration: onClick ? "underline" : "none",
       }}>
         {label}
       </span>
@@ -220,20 +221,20 @@ function LoginPage({ onNext }) {
       }}>
         <div style={{ width: "100%", maxWidth: 380, display: "flex", flexDirection: "column", gap: 24 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 6 }}>Welcome back</div>
-            <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Sign in to your account to continue</div>
+            <div style={{ fontSize: 22, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 6 }}>Welcome</div>
+            <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Please login using your credentials</div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>Username</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" }}>Username</label>
               <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                placeholder="Enter your username" style={{ width: "100%", boxSizing: "border-box" }}
+                placeholder="Enter your username" style={{ width: "100%" }}
                 onKeyDown={e => e.key === "Enter" && go()} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>Password</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)" }}>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="Enter your password" style={{ width: "100%", boxSizing: "border-box" }}
+                placeholder="Enter your password" style={{ width: "100%" }}
                 onKeyDown={e => e.key === "Enter" && go()} />
             </div>
             {error && <div style={{ fontSize: 12, color: "var(--color-text-danger)" }}>{error}</div>}
@@ -489,7 +490,7 @@ function CriteriaPage({ session, onResults }) {
                   Rules
                 </div>
                 <div style={{ padding: "0 14px 4px", fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic" }}>
-                  Instructions for what to flag in this category
+                  Prompt instruction line for what to flag in this category
                 </div>
                 {ruleItems.length === 0 ? (
                   <div style={{ padding: "6px 14px 8px", fontSize: 12, color: "var(--color-text-tertiary)" }}>
@@ -524,38 +525,38 @@ function CriteriaPage({ session, onResults }) {
         </div>
 
         {addMode === "item" ? (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Type</label>
-              <select value={addType} onChange={e => setAddType(e.target.value)} style={{ fontSize: 12 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Type</label>
+              <select value={addType} onChange={e => setAddType(e.target.value)}>
                 {Object.entries(ITEM_TYPE_META).map(([t, meta]) => <option key={t} value={t}>{meta.label}</option>)}
               </select>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 180 }}>
-              <label style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Name</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 180 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Name</label>
               <input value={addValue} onChange={e => setAddValue(e.target.value)}
                 placeholder={addType === "project" ? "e.g. FALCON" : addType === "organisation" ? "e.g. Helios Group" : "e.g. Bubble Lab"}
-                style={{ fontSize: 12 }} onKeyDown={e => e.key === "Enter" && addNamedItem()} />
+                onKeyDown={e => e.key === "Enter" && addNamedItem()} />
             </div>
-            <button onClick={addNamedItem} style={{ fontSize: 12, padding: "6px 14px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", alignSelf: "flex-end" }}>
+            <button onClick={addNamedItem} style={{ height: 42, padding: "0 18px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 500, alignSelf: "flex-end" }}>
               + Add
             </button>
           </div>
         ) : (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Category</label>
-              <select value={ruleCat} onChange={e => setRuleCat(e.target.value)} style={{ fontSize: 12 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Category</label>
+              <select value={ruleCat} onChange={e => setRuleCat(e.target.value)}>
                 {Object.entries(CATEGORY_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 240 }}>
-              <label style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Rule</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 240 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Rule</label>
               <input value={ruleText} onChange={e => setRuleText(e.target.value)}
                 placeholder="Type custom rule to be added to the indicated category here."
-                style={{ fontSize: 12 }} onKeyDown={e => e.key === "Enter" && addRule()} />
+                onKeyDown={e => e.key === "Enter" && addRule()} />
             </div>
-            <button onClick={addRule} style={{ fontSize: 12, padding: "6px 14px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", alignSelf: "flex-end" }}>
+            <button onClick={addRule} style={{ height: 42, padding: "0 18px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 500, alignSelf: "flex-end" }}>
               + Add
             </button>
           </div>
@@ -708,7 +709,7 @@ function RedactedPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
 
 // ── Page: Results ─────────────────────────────────────────────────────
 
-function ResultsPage({ pipelineResult, onBack }) {
+function ResultsPage({ pipelineResult }) {
   const { redacted_text, details } = pipelineResult;
 
   const segments = parseRedacted(redacted_text);
@@ -879,19 +880,13 @@ function ResultsPage({ pipelineResult, onBack }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={onBack} style={{
-            fontSize: 13, color: "var(--color-text-secondary)", background: "none",
-            border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "6px 12px", cursor: "pointer",
-          }}>← Back</button>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 500 }}>Analysis results</div>
-            <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
-              {flaggedDetails.length} flagged
-              {unflaggedRefs.size > 0 && ` · ${unflaggedRefs.size} unflagged`}
-              {unmatchedDetails.length > 0 && ` · ${unmatchedDetails.length} unmatched`}
-              {" · Review and confirm before downloading"}
-            </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 500 }}>Analysis results</div>
+          <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
+            {flaggedDetails.length} flagged
+            {unflaggedRefs.size > 0 && ` · ${unflaggedRefs.size} unflagged`}
+            {unmatchedDetails.length > 0 && ` · ${unmatchedDetails.length} unmatched`}
+            {" · Review and confirm before downloading"}
           </div>
         </div>
         <button onClick={handleDownload} style={{
@@ -973,9 +968,33 @@ export default function App() {
   const [page, setPage] = useState(0);
   const [session, setSession] = useState(null);
   const [pipelineResult, setPipelineResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // On mount: rehydrate session from cookie, restore last page + results
+  useEffect(() => {
+    fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.user) {
+          setSession(data.user);
+          const savedPage = parseInt(sessionStorage.getItem("d2_page") || "1", 10);
+          const savedResult = sessionStorage.getItem("d2_result");
+          if (savedResult) {
+            try { setPipelineResult(JSON.parse(savedResult)); } catch { /* ignore */ }
+          }
+          setPage(savedPage);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const goToPage = (p) => { setPage(p); sessionStorage.setItem("d2_page", p); };
+
+  if (loading) return null;
 
   if (page === 0) {
-    return <LoginPage onNext={info => { setSession(info); setPage(1); }} />;
+    return <LoginPage onNext={info => { setSession(info); goToPage(1); }} />;
   }
 
   return (
@@ -992,7 +1011,7 @@ export default function App() {
             </span>
             <button onClick={async () => {
               await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
-              setSession(null); setPipelineResult(null); setPage(0);
+              setSession(null); setPipelineResult(null); sessionStorage.clear(); goToPage(0);
             }} style={{
               fontSize: 12, color: "var(--color-text-secondary)", background: "none",
               border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "4px 10px", cursor: "pointer",
@@ -1001,20 +1020,25 @@ export default function App() {
         )}
       </div>
 
-      {page < 3 && (
+      {page <= 3 && (
         <div style={{ display: "flex", gap: 20, marginBottom: 28, alignItems: "center" }}>
           {STEPS.slice(1).map((s, i) => (
             <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {i > 0 && <div style={{ width: 24, height: 0.5, background: "var(--color-border-secondary)" }} />}
-              <Step n={i + 1} label={s} active={page === i + 1} done={page > i + 1} />
+              <Step n={i + 1} label={s} active={page === i + 1} done={page > i + 1}
+                onClick={page === 3 && page > i + 1 ? () => goToPage(i + 1) : undefined} />
             </div>
           ))}
         </div>
       )}
 
-      {page === 1 && <DisclaimerPage onNext={() => setPage(2)} />}
-      {page === 2 && <CriteriaPage session={session} onResults={data => { setPipelineResult(data); setPage(3); }} />}
-      {page === 3 && pipelineResult && <ResultsPage pipelineResult={pipelineResult} onBack={() => setPage(2)} />}
+      {page === 1 && <DisclaimerPage onNext={() => goToPage(2)} />}
+      {page === 2 && <CriteriaPage session={session} onResults={data => {
+        setPipelineResult(data);
+        sessionStorage.setItem("d2_result", JSON.stringify(data));
+        goToPage(3);
+      }} />}
+      {page === 3 && pipelineResult && <ResultsPage pipelineResult={pipelineResult} />}
     </div>
   );
 }

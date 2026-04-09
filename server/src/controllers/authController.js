@@ -7,20 +7,31 @@ export const login = (req, res) => {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const jwtSecret     = process.env.JWT_SECRET;
+  const jwtSecret = process.env.JWT_SECRET;
 
   if (!jwtSecret) {
     console.error('JWT_SECRET is not configured');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
-  if (username.toLowerCase() !== adminUsername?.toLowerCase() || password !== adminPassword) {
+  // Build user list: admin account + any extra users from USERS env var
+  let extraUsers = [];
+  try { extraUsers = JSON.parse(process.env.USERS || '[]'); } catch { extraUsers = []; }
+  console.log('[auth] attempt:', username, '| extra users loaded:', extraUsers.map(u => u.username));
+  const users = [
+    { username: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD },
+    ...extraUsers,
+  ];
+
+  const matched = users.find(
+    u => u.username?.toLowerCase() === username.toLowerCase() && u.password === password
+  );
+
+  if (!matched) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  const token = jwt.sign({ username: adminUsername }, jwtSecret, { expiresIn: '24h' });
+  const token = jwt.sign({ username: matched.username }, jwtSecret, { expiresIn: '24h' });
 
   res.cookie('token', token, {
     httpOnly: true,
@@ -28,7 +39,7 @@ export const login = (req, res) => {
     sameSite: 'lax',
   });
 
-  res.json({ user: { username: adminUsername } });
+  res.json({ user: { username: matched.username } });
 };
 
 export const logout = (_req, res) => {

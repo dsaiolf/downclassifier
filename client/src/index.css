@@ -21,3 +21,34 @@ body {
   background: var(--color-background-primary);
   color: var(--color-text-primary);
 }
+
+/* ── Form controls ────────────────────────────────────────────────── */
+input:not([type="checkbox"]):not([type="file"]),
+select,
+textarea {
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:not([type="checkbox"]):not([type="file"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+}
+
+input::placeholder {
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+}
+
+select { cursor: pointer; }
