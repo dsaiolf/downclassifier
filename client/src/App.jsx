@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-const d2Logo = "/d2-logo.svg";
+const d2Logo = "/d2_logo.svg";
 
 // ── API helpers ───────────────────────────────────────────────────────
 const API_BASE  = import.meta.env.VITE_API_BASE || "";
@@ -206,9 +206,12 @@ function LoginPage({ onNext }) {
       <div style={{
         width: "50%", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: 20,
-        background: "linear-gradient(155deg, #66B8C6 0%, #72C3D0 50%, #66B8C6 100%)",
+        position: "relative", overflow: "hidden",
       }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: "fit-content" }}>
+        <img src="/d2_background.svg" alt="" aria-hidden="true" style={{
+          position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+        }} />
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: "fit-content" }}>
           <img src={d2Logo} alt="D2 logo" style={{ height: 140, width: "auto", display: "block" }} />
           <div style={{ fontSize: 16, color: "#0A5566", letterSpacing: 0.4, textAlign: "center", width: "100%" }}>
             Document Down-Classification Buddy
@@ -247,6 +250,9 @@ function LoginPage({ onNext }) {
             }}>
               {loading ? "Signing in…" : "Sign in"}
             </button>
+          </div>
+          <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", marginTop: 8, paddingTop: 16, textAlign: "center", fontSize: 12, color: "var(--color-text-tertiary)" }}>
+            Assistive tool for downclassification of documents from C to R.
           </div>
         </div>
       </div>
@@ -544,7 +550,7 @@ function CriteriaPage({ session, onResults }) {
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 500 }}>Detection criteria</div>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>1. Curate detection criteria</div>
           <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
             Standardised rules are pre-loaded and can be customised. Add items and rules per category below.
           </div>
@@ -633,7 +639,13 @@ function CriteriaPage({ session, onResults }) {
 
       {/* Document upload */}
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10, padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 500 }}>Document</div>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>2. Upload pdf document</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>
+            For demo purposes, <em>use</em> Restricted and Below documents that <em>represent</em> Classified documents.
+          </span>
+        </div>
         <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} onClick={() => fileRef.current.click()}
           style={{
             border: `1.5px dashed ${pdfFile ? "#1D9E75" : "var(--color-border-secondary)"}`,
@@ -649,7 +661,7 @@ function CriteriaPage({ session, onResults }) {
           ) : (
             <>
               <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Drop PDF here or click to browse</div>
-              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>Classified documents only</div>
+              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>Mock-classified documents only (Restricted and below)</div>
             </>
           )}
         </div>
