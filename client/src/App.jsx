@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import d2Logo from "./assets/logo/d2_logo.png";
+const d2Logo = "/d2-logo.svg";
 
 // ── API helpers ───────────────────────────────────────────────────────
 const API_BASE  = import.meta.env.VITE_API_BASE || "";
@@ -112,7 +112,7 @@ function registryToItems(reg) {
 
 function buildCriteriaPayload(items) {
   const out = { projects: [], attachments: [], organisations: [], lead_time_items: [], custom_rules: [] };
-  for (const item of items) {
+  for (const item of items.filter(i => !i.disabled)) {
     if (item.kind === "rule") {
       out.custom_rules.push({ category: item.category, description: item.description });
     } else {
@@ -206,11 +206,13 @@ function LoginPage({ onNext }) {
       <div style={{
         width: "50%", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: 20,
-        background: "linear-gradient(155deg, #0F2A45 0%, #1A4A78 60%, #0F2A45 100%)",
+        background: "linear-gradient(155deg, #66B8C6 0%, #72C3D0 50%, #66B8C6 100%)",
       }}>
-        <img src={d2Logo} alt="D2 logo" style={{ height: 140, width: "auto" }} />
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", letterSpacing: 0.3, textAlign: "center" }}>
-          Document Down-Classification Buddy
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: "fit-content" }}>
+          <img src={d2Logo} alt="D2 logo" style={{ height: 140, width: "auto", display: "block" }} />
+          <div style={{ fontSize: 16, color: "#0A5566", letterSpacing: 0.4, textAlign: "center", width: "100%" }}>
+            Document Down-Classification Buddy
+          </div>
         </div>
       </div>
 
@@ -256,36 +258,79 @@ function LoginPage({ onNext }) {
 
 function DisclaimerPage({ onNext }) {
   const [accepted, setAccepted] = useState(false);
+
+  const cards = [
+    {
+      icon: "⚠",
+      iconColor: "#185FA5", iconBg: "#E6F1FB",
+      border: "#378ADD",
+      title: "1. Advisory only",
+      body: "This assistant provides recommendations based on its built-in reasoning and the context provided. It may not fully address specialised or time-sensitive contexts, or nuanced policy implications that require expert knowledge.",
+    },
+    {
+      icon: "✓",
+      iconColor: "#5B3FA8", iconBg: "#EEEAFB",
+      border: "#7B5CBF",
+      title: "2. Human review required",
+      body: "You must review all content and recommendations before making any classification changes. You remain fully responsible for all classification decisions.",
+    },
+    {
+      icon: "📖",
+      iconColor: "#854F0B", iconBg: "#FAEEDA",
+      border: "#BA7517",
+      title: "3. Refer to official guidance",
+      body: "For guidance, refer to GOM xxx and your team's classification guidelines. When in doubt, consult your security officer.",
+    },
+  ];
+
   return (
-    <div style={{ minHeight: 480, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
-      <div style={{
-        background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)",
-        borderRadius: 12, padding: "2rem", width: "100%", maxWidth: 520,
-        display: "flex", flexDirection: "column", gap: 20,
-      }}>
-        <div style={{ fontSize: 15, fontWeight: 500, textAlign: "center" }}>Disclaimer</div>
-        {[
-          { title: "1. Advisory only", body: "This assistant provides recommendations to help identify potential classification changes. It may not understand specialised contexts or nuanced policy implications that require expert knowledge." },
-          { title: "2. Human review required", body: "You must review all content and recommendations before making any classification changes. You remain fully responsible for all classification decisions." },
-          { title: "3. Refer to official guidance", body: "For authoritative guidance, refer to the GOM and your team's classification guidelines. When in doubt, consult your security officer." },
-        ].map(({ title, body }) => (
-          <div key={title} style={{ borderTop: "0.5px solid var(--color-border-tertiary)", paddingTop: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>{title}</div>
-            <div style={{ fontSize: 13, color: "var(--color-text-secondary)", lineHeight: 1.6 }}>{body}</div>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "2rem 0" }}>
+      <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <div style={{ fontSize: 26, fontWeight: 700, color: "var(--color-text-primary)" }}>Disclaimer</div>
+        <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 6 }}>
+          Please read and acknowledge the following before proceeding
+        </div>
+      </div>
+
+      <div style={{ width: "100%", maxWidth: 760, display: "flex", flexDirection: "column", gap: 16 }}>
+        {cards.map(({ icon, iconColor, iconBg, border, title, body }) => (
+          <div key={title} style={{
+            display: "flex", alignItems: "flex-start", gap: 16,
+            padding: "20px 24px", borderRadius: 12,
+            border: `1px solid ${border}`, background: "var(--color-background-primary)",
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+              background: iconBg, color: iconColor,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, fontWeight: 700,
+            }}>{icon}</div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 6 }}>{title}</div>
+              <div style={{ fontSize: 14, color: "var(--color-text-secondary)", lineHeight: 1.65 }}>{body}</div>
+            </div>
           </div>
         ))}
-        <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", paddingTop: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <input type="checkbox" id="accept" checked={accepted} onChange={e => setAccepted(e.target.checked)} style={{ marginTop: 2, cursor: "pointer" }} />
-          <label htmlFor="accept" style={{ fontSize: 13, color: "var(--color-text-secondary)", cursor: "pointer", lineHeight: 1.5 }}>
+
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: 12,
+          padding: "18px 24px", borderRadius: 12,
+          border: "0.5px solid var(--color-border-tertiary)",
+          background: "var(--color-background-secondary)",
+        }}>
+          <input type="checkbox" id="accept" checked={accepted} onChange={e => setAccepted(e.target.checked)}
+            style={{ marginTop: 3, cursor: "pointer", width: 16, height: 16, flexShrink: 0 }} />
+          <label htmlFor="accept" style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)", cursor: "pointer", lineHeight: 1.6 }}>
             I have read and understood the above. I understand this tool provides suggestions only. All classification decisions are my own responsibility.
           </label>
         </div>
       </div>
+
       <button onClick={onNext} disabled={!accepted} style={{
         background: accepted ? "var(--color-primary)" : "var(--color-background-secondary)",
         color: accepted ? "#fff" : "var(--color-text-tertiary)",
-        border: accepted ? "0.5px solid #3D35A0" : "0.5px solid var(--color-border-secondary)",
-        borderRadius: 8, padding: "10px 32px", fontWeight: 500, fontSize: 14,
+        border: "none", borderRadius: 8, padding: "11px 40px",
+        fontWeight: 500, fontSize: 14, marginTop: 4,
         cursor: accepted ? "pointer" : "default", transition: "all 0.15s",
       }}>
         Accept and continue
@@ -300,12 +345,7 @@ function CriteriaPage({ session, onResults }) {
   const [items, setItems] = useState([]);
   const [registryLoaded, setRegistryLoaded] = useState(false);
   const [registryError, setRegistryError] = useState("");
-
-  const [addMode, setAddMode] = useState("item");
-  const [addType, setAddType] = useState("project");
-  const [addValue, setAddValue] = useState("");
-  const [ruleCat, setRuleCat] = useState("ORGANISATIONAL");
-  const [ruleText, setRuleText] = useState("");
+  const [addInputs, setAddInputs] = useState({});
 
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -338,21 +378,25 @@ function CriteriaPage({ session, onResults }) {
       });
   }, []);
 
-  const addNamedItem = () => {
-    const v = addValue.trim();
-    if (!v || items.some(i => i.kind === "item" && i.value === v && i.type === addType)) return;
-    setItems(prev => [...prev, { id: uid(), kind: "item", type: addType, value: v, source: "session" }]);
-    setAddValue("");
+  const getInput = key => addInputs[key] || "";
+  const setInput = (key, val) => setAddInputs(prev => ({ ...prev, [key]: val }));
+
+  const addNamedItem = (type) => {
+    const v = getInput(type).trim();
+    if (!v || items.some(i => i.kind === "item" && i.value === v && i.type === type)) return;
+    setItems(prev => [...prev, { id: uid(), kind: "item", type, value: v, source: "session" }]);
+    setInput(type, "");
   };
 
-  const addRule = () => {
-    const desc = ruleText.trim();
+  const addRule = (cat) => {
+    const desc = getInput(`rule_${cat}`).trim();
     if (!desc) return;
-    setItems(prev => [...prev, { id: uid(), kind: "rule", category: ruleCat, description: desc, source: "session" }]);
-    setRuleText("");
+    setItems(prev => [...prev, { id: uid(), kind: "rule", category: cat, description: desc, source: "session" }]);
+    setInput(`rule_${cat}`, "");
   };
 
-  const removeItem = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  const removeItem   = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  const toggleItem   = (id) => setItems(prev => prev.map(i => i.id === id ? { ...i, disabled: !i.disabled } : i));
 
   const grouped = {};
   for (const item of items) {
@@ -366,17 +410,12 @@ function CriteriaPage({ session, onResults }) {
     if (file?.type === "application/pdf") setPdfFile(file);
   }, []);
 
-  // ── Run: upload PDF to S3, then call analyse ──────────────────────
   const handleRun = async () => {
     if (!pdfFile) { setRunError("Please upload a PDF file."); return; }
     setRunError(""); setLoading(true);
-
     try {
-      // Step 1: upload PDF to Maestro S3
       setProgress("Uploading document to S3…");
       const s3Key = await maestroUpload(pdfFile, session.name);
-
-      // Step 2: send criteria + s3_key to SageMaker via Maestro gateway
       setProgress("Running pipeline…");
       const data = await maestroPost({
         method:   "analyse",
@@ -384,7 +423,6 @@ function CriteriaPage({ session, onResults }) {
         session:  { user_name: session.name, division: session.division },
         criteria: buildCriteriaPayload(items),
       });
-
       if (data.error) throw new Error(data.error);
       onResults(data);
     } catch (err) {
@@ -394,22 +432,111 @@ function CriteriaPage({ session, onResults }) {
     }
   };
 
-  const sourceDot = (source) => (
-    <span title={source === "registry" ? "Pre-configured" : "Added this session"} style={{
-      width: 6, height: 6, borderRadius: "50%",
-      background: source === "registry" ? "var(--color-primary)" : "#1D9E75",
-      display: "inline-block", flexShrink: 0,
-    }} />
+  // ── Item chip (named values — short, horizontal) ─────────────────
+  // solid border = pre-configured; dashed border = session-added
+  const itemChip = (item, m) => {
+    const isRegistry = item.source === "registry";
+    const isDisabled = !!item.disabled;
+    const chipStyle = isRegistry
+      ? isDisabled
+        ? { background: "#f0f0f0", border: "1px solid #d0d0d0", color: "#a0a0a0" }
+        : { background: m.bg, border: `1px solid ${m.border}`, color: m.text }
+      : { background: "#fff", border: `1px solid ${m.border}`, color: m.text };
+    return (
+      <span key={item.id} style={{
+        display: "inline-flex", alignItems: "center", gap: 4,
+        padding: "4px 6px 4px 11px", borderRadius: 999,
+        fontSize: 13, fontWeight: 500, maxWidth: 220,
+        opacity: isDisabled ? 0.6 : 1, ...chipStyle,
+      }}>
+        <span style={{
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          textDecoration: isDisabled ? "line-through" : "none",
+        }}>{item.value}</span>
+        <button
+          onClick={() => isRegistry ? toggleItem(item.id) : removeItem(item.id)}
+          title={isRegistry ? (isDisabled ? "Click to re-enable" : "Click to disable") : "Remove"}
+          style={{ background: "none", border: "none", padding: "0 2px", lineHeight: 1, fontSize: 15,
+            cursor: "pointer", flexShrink: 0,
+            color: isRegistry
+              ? (isDisabled ? "#0E7490" : "#a0a0a0")
+              : "var(--color-text-secondary)",
+            opacity: 0.7,
+          }}>
+          {isRegistry && isDisabled ? "↩" : "×"}
+        </button>
+      </span>
+    );
+  };
+
+  // ── Rule row (full-width stacked — long text, needs full visibility) ─
+  // solid left-border accent = pre-configured; dashed outline = session-added
+  const ruleRow = (item, m) => {
+    const isRegistry = item.source === "registry";
+    const isDisabled = !!item.disabled;
+    return (
+      <div key={item.id} style={{
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "8px 12px",
+        borderRadius: 6,
+        ...(isRegistry
+          ? {
+              borderLeft: `3px solid ${isDisabled ? "#d0d0d0" : m.border}`,
+              background: isDisabled ? "#f5f5f5" : m.bg,
+            }
+          : {
+              border: `1px solid ${m.border}`,
+              background: "#fff",
+            }
+        ),
+      }}>
+        <span style={{
+          flex: 1, fontSize: 13, lineHeight: 1.6, fontStyle: "italic",
+          color: isDisabled ? "#a0a0a0" : "var(--color-text-primary)",
+          textDecoration: isDisabled ? "line-through" : "none",
+        }}>
+          &ldquo;{item.description}&rdquo;
+        </span>
+        <button
+          onClick={() => isRegistry ? toggleItem(item.id) : removeItem(item.id)}
+          title={isRegistry ? (isDisabled ? "Re-enable" : "Disable") : "Remove"}
+          style={{
+            flexShrink: 0, background: "none", border: "none", padding: "0 4px",
+            lineHeight: 1, fontSize: 20, cursor: "pointer",
+            color: isRegistry
+              ? (isDisabled ? "var(--color-primary)" : "#b0b0b0")
+              : "#b0b0b0",
+          }}>
+          {isRegistry && isDisabled ? "↩" : "×"}
+        </button>
+      </div>
+    );
+  };
+
+  const addItemRow = (type) => (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+      <input value={getInput(type)} onChange={e => setInput(type, e.target.value)}
+        placeholder="Input custom item"
+        style={{ flex: 1 }}
+        onKeyDown={e => e.key === "Enter" && addNamedItem(type)} />
+      <button onClick={() => addNamedItem(type)} style={{
+        height: 42, padding: "0 16px", background: "var(--color-primary)", color: "#fff",
+        border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, flexShrink: 0,
+      }}>+ Add item</button>
+    </div>
   );
 
-  const tabBtn = (mode, label) => (
-    <button onClick={() => setAddMode(mode)} style={{
-      fontSize: 12, padding: "5px 14px", borderRadius: 6, cursor: "pointer",
-      background: addMode === mode ? "var(--color-primary)" : "var(--color-background-secondary)",
-      color: addMode === mode ? "#fff" : "var(--color-text-secondary)",
-      border: addMode === mode ? "none" : "0.5px solid var(--color-border-secondary)",
-      fontWeight: addMode === mode ? 500 : 400,
-    }}>{label}</button>
+  const addRuleRow = (cat) => (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+      <input value={getInput(`rule_${cat}`)} onChange={e => setInput(`rule_${cat}`, e.target.value)}
+        placeholder="Input custom prompt sentence"
+        style={{ flex: 1 }}
+        onKeyDown={e => e.key === "Enter" && addRule(cat)} />
+      <button onClick={() => addRule(cat)} style={{
+        height: 42, padding: "0 16px", background: "var(--color-primary)", color: "#fff",
+        border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, flexShrink: 0,
+      }}>+ Add sentence</button>
+    </div>
   );
 
   return (
@@ -419,15 +546,19 @@ function CriteriaPage({ session, onResults }) {
         <div>
           <div style={{ fontSize: 15, fontWeight: 500 }}>Detection criteria</div>
           <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
-            Consolidated as prompts for the processing pipeline. Standardised rules are shown and can be customised by adding or removing.
+            Standardised rules are pre-loaded and can be customised. Add items and rules per category below.
           </div>
         </div>
-        <div style={{ display: "flex", gap: 12, fontSize: 11, color: "var(--color-text-secondary)", alignItems: "center", flexShrink: 0 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-primary)", display: "inline-block" }} />Pre-configured
+        {/* Legend */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#E6F1FB", border: "1px solid #378ADD", color: "#185FA5", fontSize: 11 }}>
+            Pre-configured
           </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#1D9E75", display: "inline-block" }} />Added this session
+          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#f0f0f0", border: "1px solid #d0d0d0", color: "#a0a0a0", fontSize: 11, textDecoration: "line-through" }}>
+            Pre-configured Disabled
+          </span>
+          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#fff", border: "1px solid #378ADD", color: "#185FA5", fontSize: 11 }}>
+            Added this session
           </span>
         </div>
       </div>
@@ -448,6 +579,7 @@ function CriteriaPage({ session, onResults }) {
 
         return (
           <div key={cat} style={{ border: `0.5px solid ${m.border}`, borderRadius: 10, overflow: "hidden" }}>
+            {/* Category header */}
             <div style={{ background: m.bg, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
               <Badge category={cat} />
               <span style={{ fontSize: 12, color: m.text }}>
@@ -456,112 +588,48 @@ function CriteriaPage({ session, onResults }) {
             </div>
 
             <div style={{ background: "var(--color-background-primary)" }}>
-              {/* Always show item type headers */}
+              {/* Named item type sub-sections */}
               {typesInCat.map(([type, typeMeta]) => {
                 const typeItems = namedItems.filter(i => i.type === type);
                 return (
-                  <div key={type} style={{ borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-                    <div style={{ padding: "6px 14px 2px", fontSize: 10, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  <div key={type} style={{ borderTop: "0.5px solid var(--color-border-tertiary)", padding: "10px 14px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>
                       {typeMeta.label}
                     </div>
-                    <div style={{ padding: "0 14px 4px", fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic" }}>
+                    <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic", marginBottom: 8 }}>
                       {typeMeta.hint}
                     </div>
-                    {typeItems.length === 0 ? (
-                      <div style={{ padding: "6px 14px 8px", fontSize: 12, color: "var(--color-text-tertiary)" }}>
-                        None added
-                      </div>
-                    ) : typeItems.map(item => (
-                      <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 14px", borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-                        {sourceDot(item.source)}
-                        <span style={{ fontSize: 13, flex: 1, fontWeight: 500 }}>{item.value}</span>
-                        <button onClick={() => removeItem(item.id)} style={{ fontSize: 11, color: "#C0392B", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-                          Remove
-                        </button>
-                      </div>
-                    ))}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {typeItems.length === 0
+                        ? <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>None added</span>
+                        : typeItems.map(item => itemChip(item, m))
+                      }
+                    </div>
+                    {addItemRow(type)}
                   </div>
                 );
               })}
 
-              {/* Always show Rules section */}
-              <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-                <div style={{ padding: "6px 14px 2px", fontSize: 10, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+              {/* Rules sub-section */}
+              <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", padding: "10px 14px" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>
                   Rules
                 </div>
-                <div style={{ padding: "0 14px 4px", fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic" }}>
-                  Prompt instruction line for what to flag in this category
+                <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic", marginBottom: 8 }}>
+                  Prompt instructions for what to flag in this category
                 </div>
-                {ruleItems.length === 0 ? (
-                  <div style={{ padding: "6px 14px 8px", fontSize: 12, color: "var(--color-text-tertiary)" }}>
-                    None added
-                  </div>
-                ) : ruleItems.map(item => (
-                  <div key={item.id} style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
-                    borderTop: "0.5px solid var(--color-border-tertiary)",
-                    background: "var(--color-background-secondary)",
-                  }}>
-                    {sourceDot(item.source)}
-                    <span style={{ fontSize: 12, flex: 1, lineHeight: 1.55, color: "var(--color-text-primary)", fontStyle: "italic" }}>
-                      "{item.description}"
-                    </span>
-                    <button onClick={() => removeItem(item.id)} style={{ fontSize: 11, color: "#C0392B", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {ruleItems.length === 0
+                    ? <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>None added</span>
+                    : ruleItems.map(item => ruleRow(item, m))
+                  }
+                </div>
+                {addRuleRow(cat)}
               </div>
             </div>
           </div>
         );
       })}
-
-      {/* Add criterion */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10, padding: 14 }}>
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          {tabBtn("item", "Add item")}
-          {tabBtn("rule", "Add rule")}
-        </div>
-
-        {addMode === "item" ? (
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Type</label>
-              <select value={addType} onChange={e => setAddType(e.target.value)}>
-                {Object.entries(ITEM_TYPE_META).map(([t, meta]) => <option key={t} value={t}>{meta.label}</option>)}
-              </select>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 180 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Name</label>
-              <input value={addValue} onChange={e => setAddValue(e.target.value)}
-                placeholder={addType === "project" ? "e.g. FALCON" : addType === "organisation" ? "e.g. Helios Group" : "e.g. Bubble Lab"}
-                onKeyDown={e => e.key === "Enter" && addNamedItem()} />
-            </div>
-            <button onClick={addNamedItem} style={{ height: 42, padding: "0 18px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 500, alignSelf: "flex-end" }}>
-              + Add
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Category</label>
-              <select value={ruleCat} onChange={e => setRuleCat(e.target.value)}>
-                {Object.entries(CATEGORY_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 240 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-secondary)" }}>Rule</label>
-              <input value={ruleText} onChange={e => setRuleText(e.target.value)}
-                placeholder="Type custom rule to be added to the indicated category here."
-                onKeyDown={e => e.key === "Enter" && addRule()} />
-            </div>
-            <button onClick={addRule} style={{ height: 42, padding: "0 18px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 500, alignSelf: "flex-end" }}>
-              + Add
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Document upload */}
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10, padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -587,15 +655,9 @@ function CriteriaPage({ session, onResults }) {
         </div>
       </div>
 
-      {/* Progress indicator — shown while loading */}
       {loading && (
-        <div style={{
-          background: "#EEF2FF", border: "0.5px solid #C7D2FE", borderRadius: 8,
-          padding: "10px 14px", fontSize: 13, color: "#3730A3",
-          display: "flex", alignItems: "center", gap: 10,
-        }}>
-          <Spinner />
-          {progress || "Working…"}
+        <div style={{ background: "#EEF2FF", border: "0.5px solid #C7D2FE", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#3730A3", display: "flex", alignItems: "center", gap: 10 }}>
+          <Spinner />{progress || "Working…"}
         </div>
       )}
 
