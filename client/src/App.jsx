@@ -7,13 +7,12 @@ const S3_PREFIX = "d2/uploads";
 
 async function maestroPost(payload) {
   console.log("[maestro] method:", payload.method);
-
   const resp = await fetch(`${API_BASE}/api/maestro`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(payload),
   });
-
   console.log("[maestro] status:", resp.status, resp.statusText);
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -28,15 +27,9 @@ async function maestroUpload(file, userName) {
   const form  = new FormData();
   form.append("file", file, file.name);
   form.append("key", s3Key);
-
   console.log("[upload] s3Key   :", s3Key);
   console.log("[upload] filename:", file.name, "| size:", file.size, "bytes");
-
-  const resp = await fetch(`${API_BASE}/api/upload`, {
-    method: "POST",
-    body: form,
-  });
-
+  const resp = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: form });
   console.log("[upload] status  :", resp.status, resp.statusText);
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
@@ -49,10 +42,10 @@ async function maestroUpload(file, userName) {
 // ── Constants ─────────────────────────────────────────────────────────
 
 const ITEM_TYPE_META = {
-  project:        { label: "Sensitive project",      hint: "Sensitive project(s) to be flagged",                                                  listKey: "projects",        category: "ORGANISATIONAL" },
-  attachment:     { label: "Sensitive attachment",   hint: "Sensitive attachment(s) to be flagged",                                               listKey: "attachments",     category: "ORGANISATIONAL" },
-  organisation:   { label: "Sensitive organisation", hint: "Info revealing opinions or relationship with this organisation will be flagged",       listKey: "organisations",   category: "POLITICALLY_SENSITIVE" },
-  lead_time_item: { label: "Lead-time item",         hint: "Privileged lead time information to be flagged",                                       listKey: "lead_time_items", category: "LEAD_TIME" },
+  project:        { label: "Sensitive project",      hint: "Sensitive project(s) to be flagged",                                            listKey: "projects",        category: "ORGANISATIONAL" },
+  attachment:     { label: "Sensitive attachment",   hint: "Sensitive attachment(s) to be flagged",                                         listKey: "attachments",     category: "ORGANISATIONAL" },
+  organisation:   { label: "Sensitive organisation", hint: "Info revealing opinions or relationship with this organisation will be flagged", listKey: "organisations",   category: "POLITICALLY_SENSITIVE" },
+  lead_time_item: { label: "Lead-time item",         hint: "Privileged lead time information to be flagged",                                listKey: "lead_time_items", category: "LEAD_TIME" },
 };
 
 const CATEGORY_META = {
@@ -181,8 +174,7 @@ function LoginPage({ onNext }) {
 
   const go = async () => {
     if (!username.trim() || !password) return;
-    setError("");
-    setLoading(true);
+    setError(""); setLoading(true);
     try {
       const resp = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
@@ -202,7 +194,6 @@ function LoginPage({ onNext }) {
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
-      {/* Left pane — brand */}
       <div style={{
         width: "50%", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: 20,
@@ -218,8 +209,6 @@ function LoginPage({ onNext }) {
           </div>
         </div>
       </div>
-
-      {/* Right pane — form */}
       <div style={{
         width: "50%", display: "flex", alignItems: "center", justifyContent: "center",
         background: "var(--color-background-primary)", padding: "2rem",
@@ -266,72 +255,34 @@ function DisclaimerPage({ onNext }) {
   const [accepted, setAccepted] = useState(false);
 
   const cards = [
-    {
-      icon: "⚠",
-      iconColor: "#185FA5", iconBg: "#E6F1FB",
-      border: "#378ADD",
-      title: "1. Advisory only",
-      body: "This assistant provides recommendations based on its built-in reasoning and the context provided. It may not fully address specialised or time-sensitive contexts, or nuanced policy implications that require expert knowledge.",
-    },
-    {
-      icon: "✓",
-      iconColor: "#5B3FA8", iconBg: "#EEEAFB",
-      border: "#7B5CBF",
-      title: "2. Human review required",
-      body: "You must review all content and recommendations before making any classification changes. You remain fully responsible for all classification decisions.",
-    },
-    {
-      icon: "📖",
-      iconColor: "#854F0B", iconBg: "#FAEEDA",
-      border: "#BA7517",
-      title: "3. Refer to official guidance",
-      body: "For guidance, refer to GOM xxx and your team's classification guidelines. When in doubt, consult your security officer.",
-    },
+    { icon: "⚠",  iconColor: "#185FA5", iconBg: "#E6F1FB", border: "#378ADD", title: "1. Advisory only",          body: "This assistant provides recommendations based on its built-in reasoning and the context provided. It may not fully address specialised or time-sensitive contexts, or nuanced policy implications that require expert knowledge." },
+    { icon: "✓",  iconColor: "#5B3FA8", iconBg: "#EEEAFB", border: "#7B5CBF", title: "2. Human review required",  body: "You must review all content and recommendations before making any classification changes. You remain fully responsible for all classification decisions." },
+    { icon: "📖", iconColor: "#854F0B", iconBg: "#FAEEDA", border: "#BA7517", title: "3. Refer to official guidance", body: "For guidance, refer to GOM xxx and your team's classification guidelines. When in doubt, consult your security officer." },
   ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: "2rem 0" }}>
       <div style={{ textAlign: "center", marginBottom: 8 }}>
         <div style={{ fontSize: 26, fontWeight: 700, color: "var(--color-text-primary)" }}>Disclaimer</div>
-        <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 6 }}>
-          Please read and acknowledge the following before proceeding
-        </div>
+        <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 6 }}>Please read and acknowledge the following before proceeding</div>
       </div>
-
       <div style={{ width: "100%", maxWidth: 760, display: "flex", flexDirection: "column", gap: 16 }}>
         {cards.map(({ icon, iconColor, iconBg, border, title, body }) => (
-          <div key={title} style={{
-            display: "flex", alignItems: "flex-start", gap: 16,
-            padding: "20px 24px", borderRadius: 12,
-            border: `1px solid ${border}`, background: "var(--color-background-primary)",
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-              background: iconBg, color: iconColor,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, fontWeight: 700,
-            }}>{icon}</div>
+          <div key={title} style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "20px 24px", borderRadius: 12, border: `1px solid ${border}`, background: "var(--color-background-primary)" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: iconBg, color: iconColor, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700 }}>{icon}</div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 6 }}>{title}</div>
               <div style={{ fontSize: 14, color: "var(--color-text-secondary)", lineHeight: 1.65 }}>{body}</div>
             </div>
           </div>
         ))}
-
-        <div style={{
-          display: "flex", alignItems: "flex-start", gap: 12,
-          padding: "18px 24px", borderRadius: 12,
-          border: "0.5px solid var(--color-border-tertiary)",
-          background: "var(--color-background-secondary)",
-        }}>
-          <input type="checkbox" id="accept" checked={accepted} onChange={e => setAccepted(e.target.checked)}
-            style={{ marginTop: 3, cursor: "pointer", width: 16, height: 16, flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "18px 24px", borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)" }}>
+          <input type="checkbox" id="accept" checked={accepted} onChange={e => setAccepted(e.target.checked)} style={{ marginTop: 3, cursor: "pointer", width: 16, height: 16, flexShrink: 0 }} />
           <label htmlFor="accept" style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)", cursor: "pointer", lineHeight: 1.6 }}>
             I have read and understood the above. I understand this tool provides suggestions only. All classification decisions are my own responsibility.
           </label>
         </div>
       </div>
-
       <button onClick={onNext} disabled={!accepted} style={{
         background: accepted ? "var(--color-primary)" : "var(--color-background-secondary)",
         color: accepted ? "#fff" : "var(--color-text-tertiary)",
@@ -348,33 +299,28 @@ function DisclaimerPage({ onNext }) {
 // ── Page: Criteria + Upload ───────────────────────────────────────────
 
 function CriteriaPage({ session, onResults }) {
-  const [items, setItems] = useState([]);
+  const [items, setItems]               = useState([]);
   const [registryLoaded, setRegistryLoaded] = useState(false);
-  const [registryError, setRegistryError] = useState("");
-  const [addInputs, setAddInputs] = useState({});
-
-  const [pdfFile, setPdfFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState("");
-  const [runError, setRunError] = useState("");
+  const [registryError, setRegistryError]   = useState("");
+  const [addInputs, setAddInputs]       = useState({});
+  const [pdfFile, setPdfFile]           = useState(null);
+  const [loading, setLoading]           = useState(false);
+  const [progress, setProgress]         = useState("");
+  const [runError, setRunError]         = useState("");
   const fileRef = useRef();
 
-  // ── Load registry from Maestro on mount ──────────────────────────
   useEffect(() => {
     maestroPost({ method: "registry" })
       .then(data => {
         const named = data.named_items || {};
         const rules = data.criteria_rules || {};
-
         const namedItems = registryToItems(named).map(i => ({ ...i, kind: "item" }));
-
         const ruleItems = [];
         for (const [category, ruleList] of Object.entries(rules)) {
           for (const description of (ruleList || [])) {
             ruleItems.push({ id: uid(), kind: "rule", category, description, source: "registry" });
           }
         }
-
         setItems([...namedItems, ...ruleItems]);
         setRegistryLoaded(true);
       })
@@ -401,8 +347,8 @@ function CriteriaPage({ session, onResults }) {
     setInput(`rule_${cat}`, "");
   };
 
-  const removeItem   = (id) => setItems(prev => prev.filter(i => i.id !== id));
-  const toggleItem   = (id) => setItems(prev => prev.map(i => i.id === id ? { ...i, disabled: !i.disabled } : i));
+  const removeItem = (id) => setItems(prev => prev.filter(i => i.id !== id));
+  const toggleItem = (id) => setItems(prev => prev.map(i => i.id === id ? { ...i, disabled: !i.disabled } : i));
 
   const grouped = {};
   for (const item of items) {
@@ -416,30 +362,58 @@ function CriteriaPage({ session, onResults }) {
     if (file?.type === "application/pdf") setPdfFile(file);
   }, []);
 
+  // ── Run analysis with polling ─────────────────────────────────────
   const handleRun = async () => {
     if (!pdfFile) { setRunError("Please upload a PDF file."); return; }
     setRunError(""); setLoading(true);
+
     try {
+      // Step 1: Upload PDF
       setProgress("Uploading document to S3…");
-      const s3Key = await maestroUpload(pdfFile, session.name);
-      setProgress("Running pipeline…");
-      const data = await maestroPost({
+      const s3Key = await maestroUpload(pdfFile, session.username);
+
+      // Step 2: Submit job
+      setProgress("Analysing document… this may take a few minutes");
+      const { jobid } = await maestroPost({
         method:   "analyse",
         s3_key:   s3Key,
-        session:  { user_name: session.name, division: session.division },
+        session:  { user_name: session.username },
         criteria: buildCriteriaPayload(items),
       });
-      if (data.error) throw new Error(data.error);
-      onResults(data);
+      console.log(`[poll] jobid from server: ${jobid}`);
+
+      // Step 3: Poll for completion
+      const startTime = Date.now();
+      while (true) {
+        const elapsed  = (Date.now() - startTime) / 1000;
+        const interval = elapsed < 60 ? 5000 : elapsed < 180 ? 10000 : 15000;
+        await new Promise(r => setTimeout(r, interval));
+
+        const job = await fetch(`${API_BASE}/api/maestro/status/${jobid}`, {
+          credentials: "include",
+        }).then(r => r.json());
+
+        console.log(`[poll] jobid=${jobid} status=${job.status}`);
+
+        if (job.status === "complete") {
+          if (job.result?.error) throw new Error(job.result.error);
+          onResults(job.result);
+          return;
+        }
+        if (job.status === "failed") {
+          throw new Error(job.error || "Analysis failed");
+        }
+      }
+
     } catch (err) {
       setRunError(`Error: ${err.message}`);
     } finally {
-      setLoading(false); setProgress("");
+      setLoading(false);
+      setProgress("");
     }
   };
 
-  // ── Item chip (named values — short, horizontal) ─────────────────
-  // solid border = pre-configured; dashed border = session-added
+  // ── Item chip ─────────────────────────────────────────────────────
   const itemChip = (item, m) => {
     const isRegistry = item.source === "registry";
     const isDisabled = !!item.disabled;
@@ -455,64 +429,34 @@ function CriteriaPage({ session, onResults }) {
         fontSize: 13, fontWeight: 500, maxWidth: 220,
         opacity: isDisabled ? 0.6 : 1, ...chipStyle,
       }}>
-        <span style={{
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          textDecoration: isDisabled ? "line-through" : "none",
-        }}>{item.value}</span>
-        <button
-          onClick={() => isRegistry ? toggleItem(item.id) : removeItem(item.id)}
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecoration: isDisabled ? "line-through" : "none" }}>{item.value}</span>
+        <button onClick={() => isRegistry ? toggleItem(item.id) : removeItem(item.id)}
           title={isRegistry ? (isDisabled ? "Click to re-enable" : "Click to disable") : "Remove"}
-          style={{ background: "none", border: "none", padding: "0 2px", lineHeight: 1, fontSize: 15,
-            cursor: "pointer", flexShrink: 0,
-            color: isRegistry
-              ? (isDisabled ? "#0E7490" : "#a0a0a0")
-              : "var(--color-text-secondary)",
-            opacity: 0.7,
-          }}>
+          style={{ background: "none", border: "none", padding: "0 2px", lineHeight: 1, fontSize: 15, cursor: "pointer", flexShrink: 0,
+            color: isRegistry ? (isDisabled ? "#0E7490" : "#a0a0a0") : "var(--color-text-secondary)", opacity: 0.7 }}>
           {isRegistry && isDisabled ? "↩" : "×"}
         </button>
       </span>
     );
   };
 
-  // ── Rule row (full-width stacked — long text, needs full visibility) ─
-  // solid left-border accent = pre-configured; dashed outline = session-added
+  // ── Rule row ──────────────────────────────────────────────────────
   const ruleRow = (item, m) => {
     const isRegistry = item.source === "registry";
     const isDisabled = !!item.disabled;
     return (
       <div key={item.id} style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "8px 12px",
-        borderRadius: 6,
+        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 6,
         ...(isRegistry
-          ? {
-              borderLeft: `3px solid ${isDisabled ? "#d0d0d0" : m.border}`,
-              background: isDisabled ? "#f5f5f5" : m.bg,
-            }
-          : {
-              border: `1px solid ${m.border}`,
-              background: "#fff",
-            }
-        ),
+          ? { borderLeft: `3px solid ${isDisabled ? "#d0d0d0" : m.border}`, background: isDisabled ? "#f5f5f5" : m.bg }
+          : { border: `1px solid ${m.border}`, background: "#fff" }),
       }}>
-        <span style={{
-          flex: 1, fontSize: 13, lineHeight: 1.6, fontStyle: "italic",
-          color: isDisabled ? "#a0a0a0" : "var(--color-text-primary)",
-          textDecoration: isDisabled ? "line-through" : "none",
-        }}>
+        <span style={{ flex: 1, fontSize: 13, lineHeight: 1.6, fontStyle: "italic", color: isDisabled ? "#a0a0a0" : "var(--color-text-primary)", textDecoration: isDisabled ? "line-through" : "none" }}>
           &ldquo;{item.description}&rdquo;
         </span>
-        <button
-          onClick={() => isRegistry ? toggleItem(item.id) : removeItem(item.id)}
+        <button onClick={() => isRegistry ? toggleItem(item.id) : removeItem(item.id)}
           title={isRegistry ? (isDisabled ? "Re-enable" : "Disable") : "Remove"}
-          style={{
-            flexShrink: 0, background: "none", border: "none", padding: "0 4px",
-            lineHeight: 1, fontSize: 20, cursor: "pointer",
-            color: isRegistry
-              ? (isDisabled ? "var(--color-primary)" : "#b0b0b0")
-              : "#b0b0b0",
-          }}>
+          style={{ flexShrink: 0, background: "none", border: "none", padding: "0 4px", lineHeight: 1, fontSize: 20, cursor: "pointer", color: isRegistry ? (isDisabled ? "var(--color-primary)" : "#b0b0b0") : "#b0b0b0" }}>
           {isRegistry && isDisabled ? "↩" : "×"}
         </button>
       </div>
@@ -521,114 +465,68 @@ function CriteriaPage({ session, onResults }) {
 
   const addItemRow = (type) => (
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-      <input value={getInput(type)} onChange={e => setInput(type, e.target.value)}
-        placeholder="Input custom item"
-        style={{ flex: 1 }}
-        onKeyDown={e => e.key === "Enter" && addNamedItem(type)} />
-      <button onClick={() => addNamedItem(type)} style={{
-        height: 42, padding: "0 16px", background: "var(--color-primary)", color: "#fff",
-        border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, flexShrink: 0,
-      }}>+ Add item</button>
+      <input value={getInput(type)} onChange={e => setInput(type, e.target.value)} placeholder="Input custom item" style={{ flex: 1 }} onKeyDown={e => e.key === "Enter" && addNamedItem(type)} />
+      <button onClick={() => addNamedItem(type)} style={{ height: 42, padding: "0 16px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, flexShrink: 0 }}>+ Add item</button>
     </div>
   );
 
   const addRuleRow = (cat) => (
     <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-      <input value={getInput(`rule_${cat}`)} onChange={e => setInput(`rule_${cat}`, e.target.value)}
-        placeholder="Input custom prompt sentence"
-        style={{ flex: 1 }}
-        onKeyDown={e => e.key === "Enter" && addRule(cat)} />
-      <button onClick={() => addRule(cat)} style={{
-        height: 42, padding: "0 16px", background: "var(--color-primary)", color: "#fff",
-        border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, flexShrink: 0,
-      }}>+ Add sentence</button>
+      <input value={getInput(`rule_${cat}`)} onChange={e => setInput(`rule_${cat}`, e.target.value)} placeholder="Input custom prompt sentence" style={{ flex: 1 }} onKeyDown={e => e.key === "Enter" && addRule(cat)} />
+      <button onClick={() => addRule(cat)} style={{ height: 42, padding: "0 16px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, flexShrink: 0 }}>+ Add sentence</button>
     </div>
   );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ fontSize: 15, fontWeight: 600 }}>1. Curate detection criteria</div>
-          <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
-            Standardised rules are pre-loaded and can be customised. Add items and rules per category below.
-          </div>
+          <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>Standardised rules are pre-loaded and can be customised. Add items and rules per category below.</div>
         </div>
-        {/* Legend */}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#E6F1FB", border: "1px solid #378ADD", color: "#185FA5", fontSize: 11 }}>
-            Pre-configured
-          </span>
-          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#f0f0f0", border: "1px solid #d0d0d0", color: "#a0a0a0", fontSize: 11, textDecoration: "line-through" }}>
-            Pre-configured Disabled
-          </span>
-          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#fff", border: "1px solid #378ADD", color: "#185FA5", fontSize: 11 }}>
-            Added this session
-          </span>
+          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#D1FAE5", border: "1px solid #34D399", color: "#065F46", fontSize: 11 }}>Pre-configured</span>
+          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#f0f0f0", border: "1px solid #d0d0d0", color: "#a0a0a0", fontSize: 11, textDecoration: "line-through" }}>Pre-configured Disabled</span>
+          <span style={{ padding: "3px 10px", borderRadius: 999, background: "#fff", border: "1px solid #34D399", color: "#065F46", fontSize: 11 }}>Added this session</span>
         </div>
       </div>
 
       {registryError && (
-        <div style={{ background: "#FFFBEA", border: "0.5px solid #D97706", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#92400E" }}>
-          {registryError}
-        </div>
+        <div style={{ background: "#FFFBEA", border: "0.5px solid #D97706", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#92400E" }}>{registryError}</div>
       )}
 
       {["ORGANISATIONAL", "POLITICALLY_SENSITIVE", "LEAD_TIME"].map(cat => {
         const m = CATEGORY_META[cat];
-        const catItems = (grouped[cat] || []);
+        const catItems   = (grouped[cat] || []);
         const namedItems = catItems.filter(i => i.kind === "item");
         const ruleItems  = catItems.filter(i => i.kind === "rule");
         const typesInCat = Object.entries(ITEM_TYPE_META).filter(([, v]) => v.category === cat);
         const totalCount = catItems.length;
-
         return (
           <div key={cat} style={{ border: `0.5px solid ${m.border}`, borderRadius: 10, overflow: "hidden" }}>
-            {/* Category header */}
             <div style={{ background: m.bg, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
               <Badge category={cat} />
-              <span style={{ fontSize: 12, color: m.text }}>
-                {totalCount === 0 ? "No criteria added" : `${totalCount} criteri${totalCount !== 1 ? "a" : "on"} active`}
-              </span>
+              <span style={{ fontSize: 12, color: m.text }}>{totalCount === 0 ? "No criteria added" : `${totalCount} criteri${totalCount !== 1 ? "a" : "on"} active`}</span>
             </div>
-
             <div style={{ background: "var(--color-background-primary)" }}>
-              {/* Named item type sub-sections */}
               {typesInCat.map(([type, typeMeta]) => {
                 const typeItems = namedItems.filter(i => i.type === type);
                 return (
                   <div key={type} style={{ borderTop: "0.5px solid var(--color-border-tertiary)", padding: "10px 14px" }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>
-                      {typeMeta.label}
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic", marginBottom: 8 }}>
-                      {typeMeta.hint}
-                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>{typeMeta.label}</div>
+                    <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic", marginBottom: 8 }}>{typeMeta.hint}</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {typeItems.length === 0
-                        ? <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>None added</span>
-                        : typeItems.map(item => itemChip(item, m))
-                      }
+                      {typeItems.length === 0 ? <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>None added</span> : typeItems.map(item => itemChip(item, m))}
                     </div>
                     {addItemRow(type)}
                   </div>
                 );
               })}
-
-              {/* Rules sub-section */}
               <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)", padding: "10px 14px" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>
-                  Rules
-                </div>
-                <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic", marginBottom: 8 }}>
-                  Prompt instructions for what to flag in this category
-                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Rules</div>
+                <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontStyle: "italic", marginBottom: 8 }}>Prompt instructions for what to flag in this category</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {ruleItems.length === 0
-                    ? <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>None added</span>
-                    : ruleItems.map(item => ruleRow(item, m))
-                  }
+                  {ruleItems.length === 0 ? <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>None added</span> : ruleItems.map(item => ruleRow(item, m))}
                 </div>
                 {addRuleRow(cat)}
               </div>
@@ -642,16 +540,10 @@ function CriteriaPage({ session, onResults }) {
         <div style={{ fontSize: 15, fontWeight: 600 }}>2. Upload pdf document</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>
-            For demo purposes, <em>use</em> Restricted and Below documents that <em>represent</em> Classified documents.
-          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>For demo purposes, <em>use</em> Restricted and Below documents that <em>represent</em> Classified documents.</span>
         </div>
         <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} onClick={() => fileRef.current.click()}
-          style={{
-            border: `1.5px dashed ${pdfFile ? "#1D9E75" : "var(--color-border-secondary)"}`,
-            borderRadius: 8, padding: "20px 14px", textAlign: "center", cursor: "pointer",
-            background: pdfFile ? "#F0FBF6" : "var(--color-background-secondary)", transition: "all 0.15s",
-          }}>
+          style={{ border: `1.5px dashed ${pdfFile ? "#1D9E75" : "var(--color-border-secondary)"}`, borderRadius: 8, padding: "20px 14px", textAlign: "center", cursor: "pointer", background: pdfFile ? "#F0FBF6" : "var(--color-background-secondary)", transition: "all 0.15s" }}>
           <input ref={fileRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setPdfFile(e.target.files[0] || null)} />
           {pdfFile ? (
             <>
@@ -674,9 +566,7 @@ function CriteriaPage({ session, onResults }) {
       )}
 
       {runError && (
-        <div style={{ background: "#FEF2F2", border: "0.5px solid #F87171", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#B91C1C" }}>
-          {runError}
-        </div>
+        <div style={{ background: "#FEF2F2", border: "0.5px solid #F87171", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#B91C1C" }}>{runError}</div>
       )}
 
       <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 8, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
@@ -706,7 +596,7 @@ function OriginalPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
         const d = refMap[seg.ref];
         if (!d) return null;
         const cm = CATEGORY_META[d.category] || CATEGORY_META.ORGANISATIONAL;
-        const isHovered = hoveredRef === seg.ref;
+        const isHovered   = hoveredRef === seg.ref;
         const isUnflagged = unflaggedRefs.has(seg.ref);
         return (
           <span key={seg.ref}
@@ -715,9 +605,7 @@ function OriginalPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
             onMouseLeave={() => setHoveredRef(null)}
             onClick={() => onClickRef(seg.ref)}
             style={{
-              background: isUnflagged
-                ? (isHovered ? cm.bg : "transparent")
-                : (isHovered ? cm.border : cm.bg),
+              background: isUnflagged ? (isHovered ? cm.bg : "transparent") : (isHovered ? cm.border : cm.bg),
               color: isHovered && !isUnflagged ? "#fff" : cm.text,
               border: `0.5px solid ${isUnflagged ? "#aaa" : cm.border}`,
               borderRadius: 3, cursor: "pointer", transition: "all 0.12s",
@@ -737,11 +625,10 @@ function RedactedPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
     <pre style={{ fontSize: 12, lineHeight: 1.9, margin: 0, whiteSpace: "pre-wrap", fontFamily: "var(--font-mono)", color: "var(--color-text-primary)" }}>
       {segments.map((seg, i) => {
         if (seg.type === "text") return <span key={i}>{seg.text}</span>;
-        const d = refMap[seg.ref];
+        const d  = refMap[seg.ref];
         const cm = CATEGORY_META[seg.cat] || CATEGORY_META.ORGANISATIONAL;
         const isHovered = hoveredRef === seg.ref;
         const isFlagged = !unflaggedRefs.has(seg.ref);
-
         if (isFlagged) {
           return (
             <span key={seg.ref}
@@ -749,13 +636,7 @@ function RedactedPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
               onMouseEnter={() => setHoveredRef(seg.ref)}
               onMouseLeave={() => setHoveredRef(null)}
               onClick={() => onClickRef?.(seg.ref)}
-              style={{
-                background: isHovered ? cm.border : cm.bg,
-                color: isHovered ? "#fff" : cm.badge,
-                border: `0.5px solid ${cm.border}`,
-                borderRadius: 4, padding: "1px 6px", fontSize: 12, fontWeight: 500,
-                cursor: "pointer", transition: "all 0.12s", whiteSpace: "nowrap",
-              }}>
+              style={{ background: isHovered ? cm.border : cm.bg, color: isHovered ? "#fff" : cm.badge, border: `0.5px solid ${cm.border}`, borderRadius: 4, padding: "1px 6px", fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.12s", whiteSpace: "nowrap" }}>
               [{cm.label} / {seg.ref}]
             </span>
           );
@@ -766,12 +647,7 @@ function RedactedPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
               onMouseEnter={() => setHoveredRef(seg.ref)}
               onMouseLeave={() => setHoveredRef(null)}
               onClick={() => onClickRef?.(seg.ref)}
-              style={{
-                background: isHovered ? cm.bg : "transparent",
-                color: cm.text,
-                border: "0.5px solid #aaa",
-                borderRadius: 3, cursor: "pointer", transition: "all 0.12s",
-              }}>
+              style={{ background: isHovered ? cm.bg : "transparent", color: cm.text, border: "0.5px solid #aaa", borderRadius: 3, cursor: "pointer", transition: "all 0.12s" }}>
               {d?.original_phrase ?? seg.raw}
             </span>
           );
@@ -786,20 +662,20 @@ function RedactedPanel({ segments, refMap, unflaggedRefs, segRefs, hoveredRef, s
 function ResultsPage({ pipelineResult }) {
   const { redacted_text, details } = pipelineResult;
 
-  const segments = parseRedacted(redacted_text);
-  const refMap = buildRefMap(details);
+  const segments         = parseRedacted(redacted_text);
+  const refMap           = buildRefMap(details);
   const matchedDetails   = details.filter(d => d.ref_no !== "UNMATCHED");
   const unmatchedDetails = details.filter(d => d.ref_no === "UNMATCHED");
 
-  const [hoveredRef, setHoveredRef] = useState(null);
+  const [hoveredRef, setHoveredRef]   = useState(null);
   const [unflaggedRefs, setUnflaggedRefs] = useState(new Set());
-  const [collapsed, setCollapsed] = useState({ original: false, suggested: false, details: false, unflagged: true });
-  const [downloaded, setDownloaded] = useState(false);
+  const [collapsed, setCollapsed]     = useState({ original: false, suggested: false, details: false, unflagged: true });
+  const [downloaded, setDownloaded]   = useState(false);
 
-  const detailRefs      = useRef({});
+  const detailRefs       = useRef({});
   const unflagDetailRefs = useRef({});
-  const origSegRefs     = useRef({});
-  const redactSegRefs   = useRef({});
+  const origSegRefs      = useRef({});
+  const redactSegRefs    = useRef({});
 
   const flaggedDetails   = matchedDetails.filter(d => !unflaggedRefs.has(d.ref_no));
   const unflaggedDetails = matchedDetails.filter(d =>  unflaggedRefs.has(d.ref_no));
@@ -822,7 +698,7 @@ function ResultsPage({ pipelineResult }) {
   };
 
   const scrollAllTo = (ref, skip = null) => {
-    if (skip !== "original") origSegRefs.current[ref]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (skip !== "original")  origSegRefs.current[ref]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     if (skip !== "suggested") redactSegRefs.current[ref]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     if (skip !== "detail") {
       const el = unflaggedRefs.has(ref) ? unflagDetailRefs.current[ref] : detailRefs.current[ref];
@@ -833,8 +709,8 @@ function ResultsPage({ pipelineResult }) {
   const handleDownload = () => {
     const text = buildDownloadText(redacted_text, refMap, unflaggedRefs);
     const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
     a.href = url; a.download = "redacted_document.txt"; a.click();
     URL.revokeObjectURL(url);
     setDownloaded(true);
@@ -842,12 +718,9 @@ function ResultsPage({ pipelineResult }) {
   };
 
   const panelStyle = (key) => ({
-    flex: collapsed[key] ? "0 0 32px" : 1,
-    minWidth: collapsed[key] ? 32 : 0,
-    transition: "flex 0.2s",
-    border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10,
-    overflow: "hidden", display: "flex", flexDirection: "column",
-    background: "var(--color-background-primary)",
+    flex: collapsed[key] ? "0 0 32px" : 1, minWidth: collapsed[key] ? 32 : 0,
+    transition: "flex 0.2s", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10,
+    overflow: "hidden", display: "flex", flexDirection: "column", background: "var(--color-background-primary)",
   });
 
   const panelHeader = (key, label, count) => (
@@ -861,18 +734,16 @@ function ResultsPage({ pipelineResult }) {
         {label}
         {count != null && <span style={{ fontWeight: 400, color: "var(--color-text-tertiary)", marginLeft: collapsed[key] ? 0 : 6 }}>({count})</span>}
       </span>
-      <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginLeft: collapsed[key] ? 0 : 8 }}>
-        {collapsed[key] ? "▶" : "◀"}
-      </span>
+      <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginLeft: collapsed[key] ? 0 : 8 }}>{collapsed[key] ? "▶" : "◀"}</span>
     </div>
   );
 
   const smallBtn = (color) => ({ fontSize: 11, color, background: "none", border: `0.5px solid ${color}`, borderRadius: 4, cursor: "pointer", padding: "2px 8px" });
 
   const detailCard = (d, isUnflagged) => {
-    const cm = CATEGORY_META[d.category] || CATEGORY_META.ORGANISATIONAL;
+    const cm       = CATEGORY_META[d.category] || CATEGORY_META.ORGANISATIONAL;
     const isHovered = hoveredRef === d.ref_no;
-    const topics = d.topic || [];
+    const topics   = d.topic || [];
     const refStore = isUnflagged ? unflagDetailRefs : detailRefs;
     return (
       <div key={d.ref_no}
@@ -880,26 +751,19 @@ function ResultsPage({ pipelineResult }) {
         onMouseEnter={() => setHoveredRef(d.ref_no)}
         onMouseLeave={() => setHoveredRef(null)}
         onClick={() => scrollAllTo(d.ref_no, "detail")}
-        style={{
-          padding: "12px 14px", borderBottom: "0.5px solid var(--color-border-tertiary)",
-          background: isHovered ? cm.bg : "var(--color-background-primary)",
-          transition: "background 0.12s", cursor: "pointer",
-        }}>
+        style={{ padding: "12px 14px", borderBottom: "0.5px solid var(--color-border-tertiary)", background: isHovered ? cm.bg : "var(--color-background-primary)", transition: "background 0.12s", cursor: "pointer" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: topics.length ? 6 : 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, fontWeight: 500, color: cm.badge }}>{d.ref_no}</span>
             <Badge category={d.category} />
             {d.source === "completeness" && (
-              <span style={{ fontSize: 10, color: "var(--color-text-tertiary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: 3, padding: "1px 5px" }}>
-                completeness
-              </span>
+              <span style={{ fontSize: 10, color: "var(--color-text-tertiary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: 3, padding: "1px 5px" }}>completeness</span>
             )}
           </div>
           {isUnflagged
             ? <button onClick={e => { e.stopPropagation(); reflag(d.ref_no); }} style={smallBtn("var(--color-primary)")}>Reflag</button>
             : <button onClick={e => { e.stopPropagation(); unflag(d.ref_no); }} style={smallBtn("#C0392B")}>Unflag</button>}
         </div>
-
         {topics.length > 0 && (
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8, alignItems: "center" }}>
             {topics.map(t => (
@@ -907,16 +771,12 @@ function ResultsPage({ pipelineResult }) {
                 <span style={{ padding: "2px 8px" }}>{t}</span>
                 {!isUnflagged && <>
                   <span style={{ width: "0.5px", alignSelf: "stretch", background: cm.border }} />
-                  <button onClick={e => { e.stopPropagation(); unflagByTopic(t); }}
-                    style={{ fontSize: 11, color: "#C0392B", background: "none", border: "none", cursor: "pointer", padding: "2px 8px" }}>
-                    Unflag all
-                  </button>
+                  <button onClick={e => { e.stopPropagation(); unflagByTopic(t); }} style={{ fontSize: 11, color: "#C0392B", background: "none", border: "none", cursor: "pointer", padding: "2px 8px" }}>Unflag all</button>
                 </>}
               </div>
             ))}
           </div>
         )}
-
         <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "4px 8px", fontSize: 12 }}>
           <span style={{ color: "var(--color-text-secondary)" }}>Phrase</span>
           <span style={{ fontStyle: "italic", lineHeight: 1.5 }}>&ldquo;{d.original_phrase}&rdquo;</span>
@@ -930,23 +790,16 @@ function ResultsPage({ pipelineResult }) {
   };
 
   const unmatchedCard = (d) => (
-    <div key={`${d.original_phrase}-unmatched`} style={{
-      padding: "12px 14px", borderBottom: "0.5px solid var(--color-border-tertiary)",
-      background: "#FFFBEA",
-    }}>
+    <div key={`${d.original_phrase}-unmatched`} style={{ padding: "12px 14px", borderBottom: "0.5px solid var(--color-border-tertiary)", background: "#FFFBEA" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        <span style={{ fontSize: 11, color: "#92400E", background: "#FEF3C7", border: "0.5px solid #D97706", borderRadius: 4, padding: "2px 7px", fontWeight: 500 }}>
-          UNMATCHED
-        </span>
+        <span style={{ fontSize: 11, color: "#92400E", background: "#FEF3C7", border: "0.5px solid #D97706", borderRadius: 4, padding: "2px 7px", fontWeight: 500 }}>UNMATCHED</span>
         <Badge category={d.category} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: "4px 8px", fontSize: 12 }}>
         <span style={{ color: "var(--color-text-secondary)" }}>Phrase</span>
         <span style={{ fontStyle: "italic", lineHeight: 1.5 }}>&ldquo;{d.original_phrase}&rdquo;</span>
         <span style={{ color: "var(--color-text-secondary)", marginTop: 4 }}>Note</span>
-        <span style={{ color: "#92400E", lineHeight: 1.5, marginTop: 4 }}>
-          Could not locate this phrase in the document text. Manual review recommended.
-        </span>
+        <span style={{ color: "#92400E", lineHeight: 1.5, marginTop: 4 }}>Could not locate this phrase in the document text. Manual review recommended.</span>
       </div>
     </div>
   );
@@ -960,14 +813,10 @@ function ResultsPage({ pipelineResult }) {
             {flaggedDetails.length} flagged
             {unflaggedRefs.size > 0 && ` · ${unflaggedRefs.size} unflagged`}
             {unmatchedDetails.length > 0 && ` · ${unmatchedDetails.length} unmatched`}
-            {" · Review and confirm before downloading"}
+            {" · This AI tool can make mistakes. Review and confirm before downloading"}
           </div>
         </div>
-        <button onClick={handleDownload} style={{
-          background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8,
-          padding: "8px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer",
-          display: "flex", alignItems: "center", gap: 6,
-        }}>
+        <button onClick={handleDownload} style={{ background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
           ↓ Download redacted
         </button>
       </div>
@@ -1001,10 +850,7 @@ function ResultsPage({ pipelineResult }) {
             <div style={{ overflow: "auto", flex: 1 }}>
               {flaggedDetails.length === 0 && unmatchedDetails.length === 0
                 ? <div style={{ padding: "24px 14px", fontSize: 12, color: "var(--color-text-tertiary)", textAlign: "center" }}>No flagged items</div>
-                : <>
-                    {flaggedDetails.map(d => detailCard(d, false))}
-                    {unmatchedDetails.map(d => unmatchedCard(d))}
-                  </>}
+                : <>{flaggedDetails.map(d => detailCard(d, false))}{unmatchedDetails.map(d => unmatchedCard(d))}</>}
             </div>
           )}
         </div>
@@ -1022,11 +868,7 @@ function ResultsPage({ pipelineResult }) {
       </div>
 
       {downloaded && (
-        <div style={{
-          position: "fixed", bottom: 24, right: 24, background: "#1D9E75", color: "#fff",
-          borderRadius: 8, padding: "10px 18px", fontSize: 13, fontWeight: 500,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.15)", zIndex: 999,
-        }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, background: "#1D9E75", color: "#fff", borderRadius: 8, padding: "10px 18px", fontSize: 13, fontWeight: 500, boxShadow: "0 2px 12px rgba(0,0,0,0.15)", zIndex: 999 }}>
           ✓ Redacted document downloaded
         </div>
       )}
@@ -1039,23 +881,20 @@ function ResultsPage({ pipelineResult }) {
 const STEPS = ["Sign in", "Disclaimer", "Curate Criteria & Upload Report", "Results"];
 
 export default function App() {
-  const [page, setPage] = useState(0);
-  const [session, setSession] = useState(null);
+  const [page, setPage]                   = useState(0);
+  const [session, setSession]             = useState(null);
   const [pipelineResult, setPipelineResult] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]             = useState(true);
 
-  // On mount: rehydrate session from cookie, restore last page + results
   useEffect(() => {
     fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.user) {
-          setSession(data.user);
-          const savedPage = parseInt(sessionStorage.getItem("d2_page") || "1", 10);
+          setSession({ username: data.user.username });
+          const savedPage   = parseInt(sessionStorage.getItem("d2_page") || "1", 10);
           const savedResult = sessionStorage.getItem("d2_result");
-          if (savedResult) {
-            try { setPipelineResult(JSON.parse(savedResult)); } catch { /* ignore */ }
-          }
+          if (savedResult) { try { setPipelineResult(JSON.parse(savedResult)); } catch { /* ignore */ } }
           setPage(savedPage);
         }
       })
@@ -1067,9 +906,7 @@ export default function App() {
 
   if (loading) return null;
 
-  if (page === 0) {
-    return <LoginPage onNext={info => { setSession(info); goToPage(1); }} />;
-  }
+  if (page === 0) return <LoginPage onNext={info => { setSession(info); goToPage(1); }} />;
 
   return (
     <div style={{ padding: "1.5rem", maxWidth: 1280, margin: "0 auto" }}>
@@ -1081,15 +918,14 @@ export default function App() {
         {session && (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
-              {session.name}{session.division ? ` · ${session.division}` : ""}
+              {session.username}
             </span>
             <button onClick={async () => {
               await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
               setSession(null); setPipelineResult(null); sessionStorage.clear(); goToPage(0);
-            }} style={{
-              fontSize: 12, color: "var(--color-text-secondary)", background: "none",
-              border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "4px 10px", cursor: "pointer",
-            }}>Sign out</button>
+            }} style={{ fontSize: 12, color: "var(--color-text-secondary)", background: "none", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+              Sign out
+            </button>
           </div>
         )}
       </div>
