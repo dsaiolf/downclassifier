@@ -163,6 +163,41 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+// List all past runs
+app.get('/api/past-runs', async (req, res) => {
+  try {
+    const upstream = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': SAGEMAKER_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'list_runs' }),
+    });
+    const data = await upstream.json().catch(() => ({}));
+    console.log('[past-runs] runs:', data.runs?.length ?? 'error');
+    res.json(data);
+  } catch (err) {
+    console.error('[past-runs] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get a specific past run's result
+app.get('/api/past-runs/:jobid', async (req, res) => {
+  const { jobid } = req.params;
+  try {
+    const upstream = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': SAGEMAKER_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'get_run', jobid }),
+    });
+    const data = await upstream.json().catch(() => ({}));
+    console.log(`[past-runs] get ${jobid} → ${data.status ?? 'error'}`);
+    res.json(data);
+  } catch (err) {
+    console.error(`[past-runs] get ${jobid} error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 

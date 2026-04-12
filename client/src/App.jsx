@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { History, Download, RefreshCw, TriangleAlert } from "lucide-react";
 const d2Logo = "/d2_logo.svg";
 
 // ── API helpers ───────────────────────────────────────────────────────
@@ -539,8 +540,8 @@ function CriteriaPage({ session, onResults }) {
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 10, padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ fontSize: 15, fontWeight: 600 }}>2. Upload pdf document</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>For demo purposes, <em>use</em> Restricted and Below documents that <em>represent</em> Classified documents.</span>
+          <TriangleAlert size={14} style={{ color: "#B91C1C", flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#B91C1C" }}>For demo purposes, <em>use</em> Restricted and Below documents that <em>represent</em> Classified documents.</span>
         </div>
         <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} onClick={() => fileRef.current.click()}
           style={{ border: `1.5px dashed ${pdfFile ? "#1D9E75" : "var(--color-border-secondary)"}`, borderRadius: 8, padding: "20px 14px", textAlign: "center", cursor: "pointer", background: pdfFile ? "#F0FBF6" : "var(--color-background-secondary)", transition: "all 0.15s" }}>
@@ -817,7 +818,7 @@ function ResultsPage({ pipelineResult }) {
           </div>
         </div>
         <button onClick={handleDownload} style={{ background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-          ↓ Download redacted
+          <Download size={14} /> Download redacted
         </button>
       </div>
 
@@ -876,12 +877,117 @@ function ResultsPage({ pipelineResult }) {
   );
 }
 
+// ── Page: History ─────────────────────────────────────────────────────
+
+function HistoryPage({ onBack, onSelectRun }) {
+  const [runs, setRuns]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState("");
+  const [loadingRun, setLoadingRun] = useState(null);
+
+  const fetchRuns = () => {
+    setLoading(true); setError("");
+    fetch(`${API_BASE}/api/past-runs`, { credentials: "include" })
+      .then(r => r.json())
+      .then(data => { setRuns(data.runs || []); setLoading(false); })
+      .catch(() => { setError("Could not load run history"); setLoading(false); });
+  };
+
+  useEffect(() => { fetchRuns(); }, []);
+
+  const handleSelect = async (jobid) => {
+    setLoadingRun(jobid);
+    try {
+      const resp = await fetch(`${API_BASE}/api/past-runs/${jobid}`, { credentials: "include" });
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      onSelectRun(data.result);
+    } catch (err) {
+      setError(`Could not load run ${jobid}: ${err.message}`);
+    } finally {
+      setLoadingRun(null);
+    }
+  };
+
+  // Format "20260410_035505_023" → "10 Apr 2026, 03:55:05"
+  const formatJobid = (jobid) => {
+    const parts = jobid.split("_");
+    if (parts.length < 2) return jobid;
+    const date = parts[0];
+    const time = parts[1];
+    const y  = date.slice(0, 4);
+    const mo = date.slice(4, 6);
+    const d  = date.slice(6, 8);
+    const h  = time.slice(0, 2);
+    const mi = time.slice(2, 4);
+    const s  = time.slice(4, 6);
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${d} ${months[parseInt(mo) - 1]} ${y}, ${h}:${mi}:${s}`;
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 760, margin: "0 auto" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button onClick={onBack} style={{ background: "none", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "var(--color-text-secondary)", cursor: "pointer" }}>
+            ← Back
+          </button>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>Run history</div>
+            <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>Click a run to view its results</div>
+          </div>
+        </div>
+        <button onClick={fetchRuns} disabled={loading} style={{ background: "none", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "4px 10px", fontSize: 12, color: "var(--color-text-secondary)", cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6, opacity: loading ? 0.5 : 1 }}>
+          {loading ? <Spinner /> : <RefreshCw size={13} />} Refresh
+        </button>
+      </div>
+
+      {loading && (
+        <div style={{ fontSize: 13, color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: 8 }}>
+          <Spinner /> Loading…
+        </div>
+      )}
+
+      {error && (
+        <div style={{ background: "#FEF2F2", border: "0.5px solid #F87171", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#B91C1C" }}>{error}</div>
+      )}
+
+      {!loading && runs.length === 0 && !error && (
+        <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>No runs found.</div>
+      )}
+
+      {runs.map(jobid => (
+        <div key={jobid} onClick={() => handleSelect(jobid)}
+          style={{
+            padding: "12px 16px", border: "0.5px solid var(--color-border-tertiary)",
+            borderRadius: 8, background: "var(--color-background-primary)",
+            cursor: loadingRun === jobid ? "wait" : "pointer",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            opacity: loadingRun && loadingRun !== jobid ? 0.5 : 1,
+            transition: "opacity 0.15s",
+          }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500 }}>{formatJobid(jobid)}</div>
+            <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 2 }}>{jobid}</div>
+          </div>
+          {loadingRun === jobid
+            ? <Spinner />
+            : <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>View →</span>}
+        </div>
+      ))}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 // ── Shell ─────────────────────────────────────────────────────────────
 
 const STEPS = ["Sign in", "Disclaimer", "Curate Criteria & Upload Report", "Results"];
 
 export default function App() {
   const [page, setPage]                   = useState(0);
+  const [prevPage, setPrevPage]           = useState(1);
   const [session, setSession]             = useState(null);
   const [pipelineResult, setPipelineResult] = useState(null);
   const [loading, setLoading]             = useState(true);
@@ -902,7 +1008,7 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  const goToPage = (p) => { setPage(p); sessionStorage.setItem("d2_page", p); };
+  const goToPage = (p) => { setPrevPage(page); setPage(p); sessionStorage.setItem("d2_page", p); };
 
   if (loading) return null;
 
@@ -917,9 +1023,7 @@ export default function App() {
         </div>
         {session && (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
-              {session.username}
-            </span>
+            <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>{session.username}</span>
             <button onClick={async () => {
               await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
               setSession(null); setPipelineResult(null); sessionStorage.clear(); goToPage(0);
@@ -930,15 +1034,24 @@ export default function App() {
         )}
       </div>
 
-      {page <= 3 && (
-        <div style={{ display: "flex", gap: 20, marginBottom: 28, alignItems: "center" }}>
-          {STEPS.slice(1).map((s, i) => (
-            <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {i > 0 && <div style={{ width: 24, height: 0.5, background: "var(--color-border-secondary)" }} />}
-              <Step n={i + 1} label={s} active={page === i + 1} done={page > i + 1}
-                onClick={page === 3 && i + 1 > 1 && page > i + 1 ? () => goToPage(i + 1) : undefined} />
-            </div>
-          ))}
+      {page >= 2 && page <= 3 && (
+        <div style={{ display: "flex", gap: 20, marginBottom: 28, alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            {STEPS.slice(1).map((s, i) => (
+              <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {i > 0 && <div style={{ width: 24, height: 0.5, background: "var(--color-border-secondary)" }} />}
+                <Step n={i + 1} label={s} active={page === i + 1} done={page > i + 1}
+                  onClick={page === 3 && i + 1 > 1 && page > i + 1 ? () => goToPage(i + 1) : undefined} />
+              </div>
+            ))}
+          </div>
+          <button onClick={() => goToPage(4)} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "var(--color-primary)", color: "#fff", border: "none",
+            borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, cursor: "pointer",
+          }}>
+            <History size={14} /> View History
+          </button>
         </div>
       )}
 
@@ -949,6 +1062,11 @@ export default function App() {
         goToPage(3);
       }} />}
       {page === 3 && pipelineResult && <ResultsPage pipelineResult={pipelineResult} />}
+      {page === 4 && <HistoryPage onBack={() => goToPage(prevPage || 1)} onSelectRun={data => {
+        setPipelineResult(data);
+        sessionStorage.setItem("d2_result", JSON.stringify(data));
+        goToPage(3);
+      }} />}
     </div>
   );
 }
