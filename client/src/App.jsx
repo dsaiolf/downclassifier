@@ -936,7 +936,7 @@ export default function App() {
             <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {i > 0 && <div style={{ width: 24, height: 0.5, background: "var(--color-border-secondary)" }} />}
               <Step n={i + 1} label={s} active={page === i + 1} done={page > i + 1}
-                onClick={page === 3 && page > i + 1 ? () => goToPage(i + 1) : undefined} />
+                onClick={page === 3 && i + 1 > 1 && page > i + 1 ? () => goToPage(i + 1) : undefined} />
             </div>
           ))}
         </div>
